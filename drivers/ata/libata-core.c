@@ -7443,9 +7443,54 @@ int (*funcSYNOSendDiskPortDisEvent)(unsigned int, unsigned int) = NULL;
 EXPORT_SYMBOL(funcSYNOSendDiskPortDisEvent);
 #endif /* MY_ABC_HERE */
 
-#ifdef MY_DEF_HERE
+#if (defined(MY_DEF_HERE) || defined(XPENOLOGY))
 int (*funcSYNOSendEboxRefreshEvent)(int portIndex) = NULL;
 EXPORT_SYMBOL(funcSYNOSendEboxRefreshEvent);
+#endif
+
+#ifdef MY_ABC_HERE
+/*FIXME - Too brutal and directly, should separate into levels*/
+void syno_sata_mv_gpio_write(u8 blFaulty, const unsigned short hostnum)
+{
+#ifndef XPENOLOGY
+struct Scsi_Host *shost = scsi_host_lookup(hostnum);
+struct ata_port *ap = NULL;
+void __iomem *host_mmio = NULL;
+u32 gpio_value = 0;
+int led_idx;
+
+if(NULL == shost) {
+goto END;
+}
+
+if(NULL == (ap = ata_shost_to_port(shost))) {
+scsi_host_put(shost);
+goto END;
+}
+
+if(NULL == (host_mmio = mv_host_base(ap->host))) {
+scsi_host_put(shost);
+goto END;
+}
+
+led_idx = ap->print_id - ap->host->ports[0]->print_id;
+
+gpio_value = readl(host_mmio + GPIO_CTL_DATA);
+
+if(blFaulty) {
+gpio_value |= (1 << led_idx);
+}else {
+gpio_value &= ~(1 << led_idx);
+}
+
+writel(gpio_value, host_mmio + GPIO_CTL_DATA);
+scsi_host_put(shost);
+#endif /* XPENOLOGY */
+END:
+return;
+
+}
+EXPORT_SYMBOL(syno_sata_mv_gpio_write);
 #endif
 
 #ifdef MY_ABC_HERE

@@ -3,6 +3,9 @@
 #ifndef __SYNO_USER_H_
 #define __SYNO_USER_H_
 
+/* XPEnology project */
+#define XPENOLOGY
+
 /**
  * Dsc: Synology multimedia server feature. For indexing video, photo,
  *      music.
